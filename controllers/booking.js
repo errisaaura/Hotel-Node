@@ -5,7 +5,7 @@ const Op = sequelize.Op;
 
 const model = require("../models/index");
 const booking = model.booking;
-const bookingDetail = model.detail_booking;
+const detailBooking = model.detail_booking;
 const room = model.room;
 const roomType = model.room_type;
 const customer = model.customer;
@@ -25,123 +25,94 @@ const addBookingRoom = async (req, res) => {
             booking_status: "baru",
         };
 
-        //get data customer
-        let customerData = await customer.findOne({
-            where: {
-                id_customer: data.id_customer,
-            },
-        });
-
-        const payloadData = {
-            id_user: data.id_user,
-            id_customer: data.id_customer,
-            id_room_type: data.id_room_type,
-            booking_number: data.booking_number,
-            name_customer: customerData.customer_name, //ini maunya ambil dr tabel cust
-            email: customerData.email, //ini maunya ambil dr tabel cust
-            booking_date: data.booking_date,
-            check_in_date: data.check_in_date,
-            check_out_date: data.check_out_date,
-            guest_name: data.guest_name,
-            total_room: data.total_room,
-            booking_status: "baru",
-        };
-
-        //get data room where room is available in table room and tidak ada data yang di detail
+        // rooms data
         let roomsData = await room.findAll({
             where: {
-                id_room_type: data.id_room_type,
-                room_is_available: true,
-            },
+                id_room_type: data.id_room_type
+            }
         });
 
-        // console.log(roomsData.room.dataValues.id_room)
-        // let result = roomsData
-        let id_available = []
-        for (let i = 0; i < roomsData.length; i++) {
-            // console.log(roomsData[i].dataValues.id_room)
-            id_available[i] = roomsData[i].dataValues.id_room
-        }
-
-        // console.log(id_available)
-
-
-        // check berdasaran tanggal
-        const checkTanggal = await bookingDetail.findAll({
-            '$booking.check_in_date': { [Op.between]: [payloadData.check_in_date, payloadData.check_out_date] },
-
+        //room type data
+        let roomTypeData = await roomType.findAll({
+            where: { id_room_type: data.id_room_type }
         })
 
-        for(let i = 0; i < id_available.length; i++){
-            for(let j = 0; j < checkTanggal.length; j++){
-                if(id_available[i] === checkTanggal[j].dataValues.id_room){
-                    console.log(id_available[i])
-                }else{
-                    console.log(id_available.length + ' ' + checkTanggal.length)
+        //cek room yang ada pada tabel booking_detail
+        let dataBooking = await roomType.findAll({
+            where: { id_room_type: data.id_room_type },
+            include: [
+                {
+                    model: room,
+                    as: "room",
+                    attributes: ["id_room", "id_room_type"],
+                    include: [
+                        {
+                            model: detailBooking,
+                            as: "detail_booking",
+                            attributes: ["access_date"],
+                            where: {
+                                access_date: {
+                                    [Op.between]: [data.check_in_date, data.check_out_date]
+                                }
+                            }
+                        }
+                    ]
+
                 }
-                // console.log('CheckTanggal',checkTanggal[j].dataValues.id_room)
-                // con
-            }
-        }
+            ]
+        })
 
-        // console.log(checkTanggal)
+        // get available rooms
+        const bookedRoomIds = dataBooking[0].room.map((room) => room.id_room)
+        const availableRooms = roomsData.filter((room) => !bookedRoomIds.includes(room.id_room))
 
-        //process add detail ; cek kondisi room yg ada
-        if (roomsData == null || roomsData.length < data.total_room) {
-            return res.status(404).json({
-                message: "Room not found",
-                code: 404,
-            });
-        }
+        //proses add data room yang available to one array
+        const roomsDataSelected = availableRooms.slice(0, data.total_room)
 
+        //count day 
+        const checkInDate = new Date(data.check_in_date)
+        const checkOutDate = new Date(data.check_out_date)
+        const dayTotal = Math.round((checkOutDate - checkInDate) / (1000 * 3600 * 24))
+
+        //process add booking and detail
         try {
-            // const result = await booking.create(payloadData);
-            // let roomTypeData = await roomType.findOne({
-            //     where: { id_room_type: data.id_room_type },
-            // });
+            if (roomsData == null || availableRooms.length < data.total_room || dayTotal == 0 || roomsDataSelected == null) {
+                return res.status(404).json({
+                    message: "Room not found",
+                    code: 404,
+                });
+            }
 
-            // let roomsDataSelected = [];
+            const result = await booking.create(data)
+            //add detail
+            for (let i = 0; i < dayTotal; i++) {
+                for (let j = 0; j < roomsDataSelected.length; j++) {
+                    const accessDate = new Date(checkInDate)
+                    accessDate.setDate(accessDate.getDate() + i)
+                    const dataDetailBooking = {
+                        id_booking: result.id_booking,
+                        id_room: roomsDataSelected[j].id_room,
+                        access_date: accessDate,
+                        total_price: roomTypeData.price
 
-            // //add data room where status is available to one listArray
-            // for (let i = 0; i < data.total_room; i++) {
-            //     roomsDataSelected.push(roomsData[i]);
-            //     room.update(
-            //         { room_is_available: false },
-            //         { where: { id_room: roomsData[i].id_room } }
-            //     );
-            // }
+                    }
+                    await detailBooking.create(dataDetailBooking)
+                }
 
-            //add data to booking detail
-            // let checkInDate = new Date(data.check_in_date);
-            // let checkOutDate = new Date(data.check_out_date);
-            // let dayTotal =
-            //     (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24);
+            }
+            return res.status(200).json({
+                data: result,
+                message: "Success to create booking room",
+                code: 200,
+            });
 
-            // for (let i = 0; i < dayTotal; i++) {
-            //     for (let j = 0; j < roomsDataSelected.length; j++) {
-            //         let accessDate = new Date(checkInDate);
-            //         accessDate.setDate(accessDate.getDate() + i);
-            //         let dataBookingDetail = {
-            //             id_booking: result.id_booking,
-            //             id_room: roomsDataSelected[j].id_room,
-            //             access_date: accessDate,
-            //             total_price: roomTypeData.price,
-            //         };
-            //         await bookingDetail.create(dataBookingDetail);
-            //     }
-            // }
-
-            // return res.status(200).json({
-            //     data: roomsDataSelected,
-            //     message: "Success to create booking room",
-            //     code: 200,
-            // });
         } catch (err) {
             console.log(err);
             return res.status(500).json({
                 message: "Error when create booking",
                 err: err,
             });
+
         }
     } catch (err) {
         console.log(err);
