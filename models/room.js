@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       //1 room memiliki many detail
       this.hasMany(models.detail_booking, {
         foreignKey: 'id_room',
-        as: 'room'
+        as: 'detail_booking'
       })
     }
   }
@@ -32,8 +32,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     room_number: DataTypes.INTEGER,
-    id_room_type: DataTypes.INTEGER,
-    room_is_available: DataTypes.BOOLEAN
+    id_room_type: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'room',

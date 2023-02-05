@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       //mengirim 1 to many ke detail
       this.hasMany(models.detail_booking, {
         foreignKey: 'id_booking',
-        as: 'booking'
+        as: 'detail_booking'
       })
     }
   }

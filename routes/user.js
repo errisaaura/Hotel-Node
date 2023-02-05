@@ -9,7 +9,7 @@ const auth = require("../auth/auth")
 
 
 router.post("/login", userController.login)
-router.post("/add", auth.authVerify, upload.single("photo"), userController.addUser)
+router.post("/add", upload.single("photo"), userController.addUser)
 router.put("/update/:id_user", auth.authVerify, upload.single("photo"), userController.updateUser)
 router.delete("/delete/:id_user", auth.authVerify, userController.deleteUser)
 router.get("/", auth.authVerify, userController.findAllUser)

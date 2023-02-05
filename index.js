@@ -16,7 +16,7 @@ app.use("/room-type", require("./routes/room_type"));
 app.use("/customer", require("./routes/customer"));
 app.use("/room", require("./routes/room"));
 app.use("/booking", require("./routes/booking"));
-app.use("/booking-detail", require("./routes/booking_detail"));
+app.use("/booking-detail", require("./routes/detail_booking"));
 
 const port = 8080;
 app.listen(port, () => {
