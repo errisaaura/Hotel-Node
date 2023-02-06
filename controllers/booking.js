@@ -29,6 +29,11 @@ const addBookingRoom = async (req, res) => {
         const customerData = await customer.findOne({
             where: { id_customer: data.id_customer }
         })
+        if (customerData == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
 
         data.name_customer = customerData.customer_name
         data.email = customerData.email
@@ -44,6 +49,11 @@ const addBookingRoom = async (req, res) => {
         let roomTypeData = await roomType.findAll({
             where: { id_room_type: data.id_room_type }
         })
+        if (roomTypeData == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
 
         //cek room yang ada pada tabel booking_detail
         let dataBooking = await roomType.findAll({
@@ -171,6 +181,14 @@ const deleteOneBooking = async (req, res) => {
 const updateStatusBooking = async (req, res) => {
     try {
         const params = req.params.id_booking
+
+        const result = booking.findOne({where : params})
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+
         const data = {
             booking_status: req.body.booking_status
         }
@@ -201,6 +219,11 @@ const getOneBooking = async (req, res) => {
             include: ["user", "customer", "room_type"],
             where: params,
         });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
 
         return res.status(200).json({
             message: "Succes to get one booking",

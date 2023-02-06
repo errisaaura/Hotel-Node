@@ -42,8 +42,14 @@ const updateRoomType = async (req, res) => {
             description: req.body.description,
         };
 
+        const result = await roomType.findOne({ where: params });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+
         if (req.file) {
-            const result = await roomType.findOne({ where: params });
             try {
                 const oldFileName = result.photo;
 
@@ -52,6 +58,10 @@ const updateRoomType = async (req, res) => {
                 fs.unlink(dir, (err) => console.log(err));
             } catch (err) {
                 console.log(err);
+                return res.status(500).json({
+                    message: "Error while update file",
+                    err: err,
+                });
             }
 
             data_edit.photo = req.file.filename;
@@ -77,6 +87,11 @@ const deleteRoomType = async (req, res) => {
             id_room_type: req.params.id_room_type,
         };
         const result = await roomType.findOne({ where: params });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
         try {
             const oldFileName = result.photo;
 
@@ -125,6 +140,12 @@ const getOneRoomType = async (req, res) => {
             id_room_type: req.params.id_room_type,
         };
         const result = await roomType.findOne({ where: params });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+        
         return res.status(200).json({
             message: "Success to get one room type",
             code: 200,

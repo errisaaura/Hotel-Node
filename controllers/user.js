@@ -22,7 +22,6 @@ const login = async (req, res) => {
         if (findUser == null) {
             return res.status(404).json({
                 message: "username or password doesn't match",
-                err: error,
             });
         }
         //generate jwt token
@@ -91,8 +90,14 @@ const updateUser = async (req, res) => {
             email: req.body.email,
         };
 
+        const result = await user.findOne({ where: params });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!",
+            });
+        }
+
         if (req.file) {
-            const result = await user.findOne({ where: params });
             try {
                 const oldFileName = result.photo;
 
@@ -102,7 +107,7 @@ const updateUser = async (req, res) => {
             } catch (err) {
                 console.log(err);
                 return res.status(500).json({
-                    message: "internal error",
+                    message: "Error while update file",
                     err: err,
                 });
             }
@@ -130,6 +135,11 @@ const deleteUser = async (req, res) => {
             id_user: req.params.id_user,
         };
         const result = await user.findOne({ where: params });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
         try {
             const oldFileName = result.photo;
 
@@ -179,11 +189,16 @@ const findOneUser = async (req, res) => {
         const params = {
             id_user: req.params.id_user,
         };
-        const oneUser = await user.findOne({ where: params });
+        const result = await user.findOne({ where: params });
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
         return res.status(200).json({
             message: "Success to get one user",
             code: 200,
-            data: oneUser,
+            data: result,
         });
     } catch (err) {
         console.log(err);

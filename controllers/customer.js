@@ -92,6 +92,13 @@ const updateCustomer = async (req, res) => {
             email: req.body.email
         }
 
+        const result = await customer.findOne({where : params})
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+
         await customer.update(data_edit, { where: params })
         return res.status(200).json({
             message: "Success update customer",
@@ -109,6 +116,12 @@ const deleteCustomer = async (req, res) => {
     try {
         const params = {
             id_customer: req.params.id_customer
+        }
+        const result = await customer.findOne({ where : params})
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
         }
         await customer.destroy({ where: params })
         return res.status(200).json({
@@ -151,6 +164,11 @@ const findOneCustomer = async (req, res) => {
             id_customer: req.params.id_customer
         }
         const result = await customer.findOne({ where: params })
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
         return res.status(200).json({
             message: "Success to get one customer",
             code: 200,

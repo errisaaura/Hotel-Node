@@ -2,13 +2,13 @@ const Sequelize = require("sequelize");
 
 const model = require("../models/index");
 const room = model.room;
+const roomType = model.room_type
 
 const addRoom = async (req, res) => {
     try {
         const data = {
             room_number: req.body.room_number,
             id_room_type: req.body.id_room_type,
-            room_is_available: true,
         };
 
         await room.create(data);
@@ -31,10 +31,18 @@ const updateRoom = async (req, res) => {
         const params = {
             id_room: req.params.id_room,
         };
+
         const data_edit = {
             room_number: req.body.room_number,
             id_room_type: req.body.id_room_type,
         };
+
+        const result = await room.findOne({ where: params })
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
 
         await room.update(data_edit, { where: params });
         return res.status(200).json({
@@ -54,6 +62,14 @@ const deleteRoom = async (req, res) => {
         const params = {
             id_room: req.params.id_room,
         };
+
+        const result = await room.findOne({ where: params })
+        if (result == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+
         await room.destroy({ where: params });
         return res.status(200).json({
             message: "Success to delete room",
@@ -97,10 +113,18 @@ const findRoomByIdRoomType = async (req, res) => {
             id_room_type: req.params.id_room_type,
         };
 
+        const resultRoomType = await roomType.findOne({ where: params })
+        if (resultRoomType == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+
         const result = await room.findAll({
             include: ["room_type"],
             where: params,
         });
+
         return res.status(200).json({
             message: "Succes to get all room by type room",
             code: 200,
