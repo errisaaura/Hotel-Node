@@ -27,7 +27,7 @@ const addBookingRoom = async (req, res) => {
 
         // customer data
         const customerData = await customer.findOne({
-            where : {id_customer : data.id_customer}
+            where: { id_customer: data.id_customer }
         })
 
         data.name_customer = customerData.customer_name
@@ -44,8 +44,6 @@ const addBookingRoom = async (req, res) => {
         let roomTypeData = await roomType.findAll({
             where: { id_room_type: data.id_room_type }
         })
-
-        console.log(roomTypeData)
 
         //cek room yang ada pada tabel booking_detail
         let dataBooking = await roomType.findAll({
@@ -137,24 +135,24 @@ const deleteOneBooking = async (req, res) => {
     try {
         const idBooking = req.params.id_booking
         const findDataBooking = await booking.findOne({
-            where : {id_booking : idBooking}
+            where: { id_booking: idBooking }
         })
-        if(findDataBooking == null){
+        if (findDataBooking == null) {
             return res.status(404).json({
                 message: "Data not found!",
             });
         }
 
-        const findDataDetailBooking = await detailBooking.findAll({ where : {id_booking : idBooking}})
-        if(findDataDetailBooking == null){
+        const findDataDetailBooking = await detailBooking.findAll({ where: { id_booking: idBooking } })
+        if (findDataDetailBooking == null) {
             return res.status(404).json({
                 message: "Data not found!",
                 err: err,
             });
         }
 
-        await detailBooking.destroy({where : {id_booking : idBooking}})
-        await booking.destroy({where : {id_booking : idBooking}})
+        await detailBooking.destroy({ where: { id_booking: idBooking } })
+        await booking.destroy({ where: { id_booking: idBooking } })
 
         return res.status(200).json({
             message: "Success to delete booking",
@@ -167,6 +165,29 @@ const deleteOneBooking = async (req, res) => {
             message: "Internal error",
             err: err,
         });
+    }
+}
+
+const updateStatusBooking = async (req, res) => {
+    try {
+        const params = req.params.id_booking
+        const data = {
+            booking_status: req.body.booking_status
+        }
+
+        await booking.update(data, { where: { id_booking: params } })
+        return res.status(200).json({
+            message: "Success update status booking",
+            code: 200
+        })
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+
     }
 }
 
@@ -214,11 +235,12 @@ const getAllBooking = async (req, res) => {
     }
 };
 
+// filter by checkInDate
 findBookingDataFilter = async (req, res) => {
     try {
         const keyword = req.body.keyword
-        const checkInDate = new Date (req.body.check_in_date);
-        const checOutDate = new Date (req.body.check_out_date);
+        const checkInDate = new Date(req.body.check_in_date);
+        const checOutDate = new Date(req.body.check_out_date);
 
         const result = await booking.findAll({
             include: ["user", "room_type", "customer"],
@@ -227,13 +249,12 @@ findBookingDataFilter = async (req, res) => {
                     booking_number: { [Op.like]: `%${keyword}%` },
                     name_customer: { [Op.like]: `%${keyword}%` },
                     email: { [Op.like]: `%${keyword}%` },
-                    guest_name: { [Op.like]: `%${keyword}%` }
+                    guest_name: { [Op.like]: `%${keyword}%` },
+                    check_in_date: {
+                        [Op.between]: [checkInDate, checOutDate],
+                    },
                 }
-
-            },
-            check_in_date: {
-                [Op.between]: [checkInDate, checOutDate],
-            },
+            }
         });
 
         return res.status(200).json({
@@ -280,6 +301,7 @@ const findBookingByNameCustomer = async (req, res) => {
 module.exports = {
     addBookingRoom,
     deleteOneBooking,
+    updateStatusBooking,
     getAllBooking,
     getOneBooking,
     findBookingDataFilter,
