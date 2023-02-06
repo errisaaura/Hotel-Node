@@ -25,6 +25,14 @@ const addBookingRoom = async (req, res) => {
             booking_status: "baru",
         };
 
+        // customer data
+        const customerData = await customer.findOne({
+            where : {id_customer : data.id_customer}
+        })
+
+        data.name_customer = customerData.customer_name
+        data.email = customerData.email
+
         // rooms data
         let roomsData = await room.findAll({
             where: {
@@ -36,6 +44,8 @@ const addBookingRoom = async (req, res) => {
         let roomTypeData = await roomType.findAll({
             where: { id_room_type: data.id_room_type }
         })
+
+        console.log(roomTypeData)
 
         //cek room yang ada pada tabel booking_detail
         let dataBooking = await roomType.findAll({
@@ -93,7 +103,7 @@ const addBookingRoom = async (req, res) => {
                         id_booking: result.id_booking,
                         id_room: roomsDataSelected[j].id_room,
                         access_date: accessDate,
-                        total_price: roomTypeData.price
+                        total_price: roomTypeData[0].price
 
                     }
                     await detailBooking.create(dataDetailBooking)
@@ -123,6 +133,43 @@ const addBookingRoom = async (req, res) => {
     }
 };
 
+const deleteOneBooking = async (req, res) => {
+    try {
+        const idBooking = req.params.id_booking
+        const findDataBooking = await booking.findOne({
+            where : {id_booking : idBooking}
+        })
+        if(findDataBooking == null){
+            return res.status(404).json({
+                message: "Data not found!",
+            });
+        }
+
+        const findDataDetailBooking = await detailBooking.findAll({ where : {id_booking : idBooking}})
+        if(findDataDetailBooking == null){
+            return res.status(404).json({
+                message: "Data not found!",
+                err: err,
+            });
+        }
+
+        await detailBooking.destroy({where : {id_booking : idBooking}})
+        await booking.destroy({where : {id_booking : idBooking}})
+
+        return res.status(200).json({
+            message: "Success to delete booking",
+            code: 200,
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+}
+
 const getOneBooking = async (req, res) => {
     try {
         const params = {
@@ -150,7 +197,7 @@ const getOneBooking = async (req, res) => {
 const getAllBooking = async (req, res) => {
     try {
         const result = await booking.findAll({
-            // include: ["room_type"],
+            include: ["room_type"],
         });
 
         return res.status(200).json({
@@ -169,21 +216,21 @@ const getAllBooking = async (req, res) => {
 
 findBookingDataFilter = async (req, res) => {
     try {
-        // const keyword = req.body.keyword
-        const checkInDate = req.body.check_in_date;
-        const checOutDate = req.body.check_out_date;
+        const keyword = req.body.keyword
+        const checkInDate = new Date (req.body.check_in_date);
+        const checOutDate = new Date (req.body.check_out_date);
 
         const result = await booking.findAll({
-            // include: ["user", "room_type", "customer"],
-            // where: {
-            //     [Op.or]: {
-            //         booking_number: { [Op.like]: `%${keyword}%` },
-            //         name_customer: { [Op.like]: `%${keyword}%` },
-            //         email: { [Op.like]: `%${keyword}%` },
-            //         guest_name: { [Op.like]: `%${keyword}%` }
-            //     }
+            include: ["user", "room_type", "customer"],
+            where: {
+                [Op.or]: {
+                    booking_number: { [Op.like]: `%${keyword}%` },
+                    name_customer: { [Op.like]: `%${keyword}%` },
+                    email: { [Op.like]: `%${keyword}%` },
+                    guest_name: { [Op.like]: `%${keyword}%` }
+                }
 
-            // },
+            },
             check_in_date: {
                 [Op.between]: [checkInDate, checOutDate],
             },
@@ -208,7 +255,7 @@ const findBookingByNameCustomer = async (req, res) => {
         const keyword = req.body.keyword;
 
         const result = await booking.findAll({
-            // include: ["room_type"],
+            include: ["room_type"],
             where: {
                 [Op.or]: {
                     name_customer: { [Op.like]: `%${keyword}%` },
@@ -232,6 +279,7 @@ const findBookingByNameCustomer = async (req, res) => {
 
 module.exports = {
     addBookingRoom,
+    deleteOneBooking,
     getAllBooking,
     getOneBooking,
     findBookingDataFilter,
