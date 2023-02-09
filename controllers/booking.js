@@ -180,9 +180,9 @@ const deleteOneBooking = async (req, res) => {
 
 const updateStatusBooking = async (req, res) => {
     try {
-        const params = req.params.id_booking
+        const params = { id_booking: req.params.id_booking }
 
-        const result = booking.findOne({where : params})
+        const result = booking.findOne({ where: params })
         if (result == null) {
             return res.status(404).json({
                 message: "Data not found!"
@@ -193,7 +193,20 @@ const updateStatusBooking = async (req, res) => {
             booking_status: req.body.booking_status
         }
 
-        await booking.update(data, { where: { id_booking: params } })
+        if (data.booking_status == "check_out") {
+            await booking.update(data, { where: params })
+
+            const updateTglAccess = {
+                access_date: null
+            }
+            await detailBooking.update(updateTglAccess, { where: params })
+            return res.status(200).json({
+                message: "Success update status booking to check out",
+                code: 200
+            })
+        }
+
+        await booking.update(data, { where: params })
         return res.status(200).json({
             message: "Success update status booking",
             code: 200
