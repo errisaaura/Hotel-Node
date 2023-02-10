@@ -182,7 +182,7 @@ const updateStatusBooking = async (req, res) => {
     try {
         const params = { id_booking: req.params.id_booking }
 
-        const result = booking.findOne({ where: params })
+        const result = booking.findOne({ where: params }) 
         if (result == null) {
             return res.status(404).json({
                 message: "Data not found!"
