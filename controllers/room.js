@@ -3,6 +3,9 @@ const Sequelize = require("sequelize");
 const model = require("../models/index");
 const room = model.room;
 const roomType = model.room_type
+const detailBooking = model.detail_booking
+
+const Op = Sequelize.Op
 
 const addRoom = async (req, res) => {
     try {
@@ -140,10 +143,94 @@ const findRoomByIdRoomType = async (req, res) => {
     }
 };
 
-module.exports = {
-    addRoom,
-    updateRoom,
-    deleteRoom,
-    findAllRoom,
-    findRoomByIdRoomType,
-};
+const findRoomByFilterDate = async (req, res) => {
+    const checkInDate = req.body.check_in_date
+    const checkOutDate = req.body.check_out_date
+
+    const roomData = await roomType.findAll({
+        attributes: ["id_room_type", "name_room_type"],
+        include: [
+            {
+                model: room,
+                as: "room"
+
+            }
+        ]
+    })
+
+    const roomBookedData = await roomType.findAll({
+        atrributes: ["id_room_type", "name_room_type"],
+        include: [
+            {
+                model: room,
+                as: "room",
+                include : [
+                    {
+                        model : detailBooking,
+                        as : "detail_booking",
+                        attributes : ["access_date"],
+                        where: {
+                            access_date: {
+                                [Op.between] : [checkInDate, checkOutDate]
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    })
+
+    const available = []
+    const availableByType = []
+
+    for(let i=0; i < roomData.length; i++){
+        roomData[i].room.forEach((room) => {
+            let isBooked = false
+            roomBookedData.forEach((booked) => {
+                booked.room.forEach((bookedRoom) => {
+                    if(room.id_room === bookedRoom.id_room){
+                        isBooked = true
+                    }
+                })
+            })
+
+            if(!isBooked){
+                available.push(room)
+            }
+        })
+    }
+
+    for(let i=0; i < roomData.length; i++){
+        let roomType = {}
+        roomType.id_room_type = roomData[i].id_room_type
+        roomType.name_room_type = roomData[i].name_room_type
+        roomType.room = []
+        available.forEach((room) => {
+            if(room.id_room_type === roomData[i].id_room_type){
+                roomType.room.push(room)
+            }
+        })
+        if(roomType.room.length > 0){
+            availableByType.push(roomType)
+        }
+    }
+
+    return res.status(200).json({
+        message: "Succes to get available room by type room",
+        code: 200,
+        roomAvailable : available,
+        roomAvailableCount : available.length,
+        room: availableByType,
+        typeRoomCount: availableByType.length
+    });
+
+}
+
+    module.exports = {
+        addRoom,
+        updateRoom,
+        deleteRoom,
+        findAllRoom,
+        findRoomByIdRoomType,
+        findRoomByFilterDate
+    };
