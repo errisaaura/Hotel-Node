@@ -182,7 +182,7 @@ const updateStatusBooking = async (req, res) => {
     try {
         const params = { id_booking: req.params.id_booking }
 
-        const result = booking.findOne({ where: params }) 
+        const result = booking.findOne({ where: params })
         if (result == null) {
             return res.status(404).json({
                 message: "Data not found!"
@@ -334,6 +334,37 @@ const findBookingByNameCustomer = async (req, res) => {
     }
 };
 
+const findBookingByIdCustomer = async (req, res) => {
+    try {
+        const params = {
+            id_customer: req.params.id_customer
+        }
+
+        const customerData = await customer.findOne({
+            where: params
+        })
+        if (customerData == null) {
+            return res.status(404).json({
+                message: "Data not found!"
+            });
+        }
+
+        const result = await booking.findAll({ where: params })
+        return res.status(200).json({
+            message: "Succes to get all booking by id customer",
+            count: result.length,
+            data: result,
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+}
+
 module.exports = {
     addBookingRoom,
     deleteOneBooking,
@@ -342,4 +373,5 @@ module.exports = {
     getOneBooking,
     findBookingDataFilter,
     findBookingByNameCustomer,
+    findBookingByIdCustomer
 };

@@ -12,5 +12,6 @@ router.get("/", bookingController.getAllBooking)
 router.get("/:id_booking", bookingController.getOneBooking)
 router.post("/find/name-customer", bookingController.findBookingByNameCustomer)
 router.post("/find/filter", bookingController.findBookingDataFilter)
+router.get("/customer/:id_customer", bookingController.findBookingByIdCustomer)
 
 module.exports = router
