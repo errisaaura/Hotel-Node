@@ -10,7 +10,7 @@ const customer = model.customer
 
 const register = async (req, res) => {
     try {
-        const data = {
+        let data = {
             nik: req.body.nik,
             customer_name: req.body.customer_name,
             address: req.body.address,
@@ -24,7 +24,7 @@ const register = async (req, res) => {
             "data": {
                 nik: data.nik,
                 customer_name: data.customer_name,
-                address: data.nik,
+                address: data.address,
                 email: data.email
             },
             "code": 200
