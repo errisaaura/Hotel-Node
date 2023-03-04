@@ -12,26 +12,28 @@ module.exports = {
       id_user: {
         type: Sequelize.INTEGER,
         references: {
-          model : "user",
+          model: "user",
           key: "id_user"
         }
       },
       id_customer: {
         type: Sequelize.INTEGER,
         references: {
-          model : "customer",
+          model: "customer",
           key: "id_customer"
         }
       },
       id_room_type: {
         type: Sequelize.INTEGER,
         references: {
-          model : "room_type",
+          model: "room_type",
           key: "id_room_type"
         }
       },
       booking_number: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true
       },
       name_customer: {
         type: Sequelize.STRING

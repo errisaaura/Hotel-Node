@@ -10,12 +10,14 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       room_number: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true
       },
       id_room_type: {
         type: Sequelize.INTEGER,
         references: {
-          model : "room_type",
+          model: "room_type",
           key: "id_room_type"
         }
       },
