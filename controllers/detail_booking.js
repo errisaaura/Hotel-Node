@@ -27,7 +27,6 @@ const getAllBookingDetail = async (req, res) => {
 const findBookingDetail = async (req, res) => {
     try {
         const keyword = new Date(req.body.keyword)
-        // const accessDate = req.body.access_date
 
         const result = await bookingDetail.findAll({
             include: ["booking", "room"],

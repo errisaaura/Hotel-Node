@@ -31,7 +31,7 @@ const addBookingRoom = async (req, res) => {
         })
         if (customerData == null) {
             return res.status(404).json({
-                message: "Data not found!"
+                message: "Data customer not found!"
             });
         }
 
@@ -51,7 +51,7 @@ const addBookingRoom = async (req, res) => {
         })
         if (roomTypeData == null) {
             return res.status(404).json({
-                message: "Data not found!"
+                message: "Data room type not found!"
             });
         }
 
