@@ -147,8 +147,16 @@ const findRoomByFilterDate = async (req, res) => {
     const checkInDate = req.body.check_in_date
     const checkOutDate = req.body.check_out_date
 
+    if (checkInDate === "" || checkOutDate === "") {
+        return res.status(200).json({
+            message: "null",
+            code: 200,
+            room : []
+        });
+    }
+
     const roomData = await roomType.findAll({
-        attributes: ["id_room_type", "name_room_type"],
+        attributes: ["id_room_type", "name_room_type", "price", "description", "photo"],
         include: [
             {
                 model: room,
@@ -159,19 +167,19 @@ const findRoomByFilterDate = async (req, res) => {
     })
 
     const roomBookedData = await roomType.findAll({
-        atrributes: ["id_room_type", "name_room_type"],
+        atrributes: ["id_room_type", "name_room_type", "price", "description", "photo"],
         include: [
             {
                 model: room,
                 as: "room",
-                include : [
+                include: [
                     {
-                        model : detailBooking,
-                        as : "detail_booking",
-                        attributes : ["access_date"],
+                        model: detailBooking,
+                        as: "detail_booking",
+                        attributes: ["access_date"],
                         where: {
                             access_date: {
-                                [Op.between] : [checkInDate, checkOutDate]
+                                [Op.between]: [checkInDate, checkOutDate]
                             }
                         }
                     }
@@ -183,34 +191,37 @@ const findRoomByFilterDate = async (req, res) => {
     const available = []
     const availableByType = []
 
-    for(let i=0; i < roomData.length; i++){
+    for (let i = 0; i < roomData.length; i++) {
         roomData[i].room.forEach((room) => {
             let isBooked = false
             roomBookedData.forEach((booked) => {
                 booked.room.forEach((bookedRoom) => {
-                    if(room.id_room === bookedRoom.id_room){
+                    if (room.id_room === bookedRoom.id_room) {
                         isBooked = true
                     }
                 })
             })
 
-            if(!isBooked){
+            if (!isBooked) {
                 available.push(room)
             }
         })
     }
 
-    for(let i=0; i < roomData.length; i++){
+    for (let i = 0; i < roomData.length; i++) {
         let roomType = {}
         roomType.id_room_type = roomData[i].id_room_type
         roomType.name_room_type = roomData[i].name_room_type
+        roomType.price = roomData[i].price
+        roomType.description = roomData[i].description
+        roomType.photo = roomData[i].photo
         roomType.room = []
         available.forEach((room) => {
-            if(room.id_room_type === roomData[i].id_room_type){
+            if (room.id_room_type === roomData[i].id_room_type) {
                 roomType.room.push(room)
             }
         })
-        if(roomType.room.length > 0){
+        if (roomType.room.length > 0) {
             availableByType.push(roomType)
         }
     }
@@ -218,19 +229,47 @@ const findRoomByFilterDate = async (req, res) => {
     return res.status(200).json({
         message: "Succes to get available room by type room",
         code: 200,
-        roomAvailable : available,
-        roomAvailableCount : available.length,
+        roomAvailable: available,
+        roomAvailableCount: available.length,
         room: availableByType,
         typeRoomCount: availableByType.length
     });
 
 }
 
-    module.exports = {
-        addRoom,
-        updateRoom,
-        deleteRoom,
-        findAllRoom,
-        findRoomByIdRoomType,
-        findRoomByFilterDate
-    };
+const findRoomDataFilter = async (req, res) => {
+    try {
+        const keyword = req.body.keyword
+
+        const result = await room.findAll({
+            include: ["room_type"],
+            where: {
+                [Op.or]: {
+                    room_number: { [Op.like]: `%${keyword}%` }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Succes to get all room by filter",
+            count: result.length,
+            data: result,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+};
+
+module.exports = {
+    addRoom,
+    updateRoom,
+    deleteRoom,
+    findAllRoom,
+    findRoomByIdRoomType,
+    findRoomByFilterDate,
+    findRoomDataFilter
+};

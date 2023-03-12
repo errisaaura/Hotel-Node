@@ -29,6 +29,7 @@ const login = async (req, res) => {
             id_user: findUser.id_customer,
             email: findUser.email,
             role: findUser.role,
+            user_name: findUser.user_name
         };
         tokenPayload = JSON.stringify(tokenPayload);
         let token = await jsonwebtoken.sign(tokenPayload, SECRET_KEY);
@@ -41,6 +42,7 @@ const login = async (req, res) => {
                 id_user: findUser.id_user,
                 email: findUser.email,
                 role: findUser.role,
+                user_name: findUser.user_name
             },
         });
     } catch (err) {
@@ -211,6 +213,56 @@ const findOneUser = async (req, res) => {
     }
 };
 
+const findAllUserRoleResepsionis = async (req, res) => {
+    try {
+        const result = await user.findAll({
+            where: {
+                role: "resepsionis"
+            }
+        });
+        return res.status(200).json({
+            message: "Succes to get all user",
+            count: result.length,
+            data: result,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+
+}
+
+const findUserDataFilter = async (req, res) => {
+    try {
+        const keyword = req.body.keyword
+
+        const result = await user.findAll({
+            where: {
+                [Op.or]: {
+                    user_name: { [Op.like]: `%${keyword}%` },
+                    email: { [Op.like]: `%${keyword}%` },
+                    role: { [Op.like]: `%${keyword}%` }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Succes to get all user by filter",
+            count: result.length,
+            data: result,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+};
+
 module.exports = {
     login,
     addUser,
@@ -218,4 +270,6 @@ module.exports = {
     deleteUser,
     findAllUser,
     findOneUser,
+    findAllUserRoleResepsionis,
+    findUserDataFilter
 };

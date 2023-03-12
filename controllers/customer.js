@@ -6,7 +6,7 @@ const SECRET_KEY = "secretcode"
 const model = require("../models/index")
 const customer = model.customer
 
-
+const Op = Sequelize.Op;
 
 const register = async (req, res) => {
     try {
@@ -92,7 +92,7 @@ const updateCustomer = async (req, res) => {
             email: req.body.email
         }
 
-        const result = await customer.findOne({where : params})
+        const result = await customer.findOne({ where: params })
         if (result == null) {
             return res.status(404).json({
                 message: "Data not found!"
@@ -117,7 +117,7 @@ const deleteCustomer = async (req, res) => {
         const params = {
             id_customer: req.params.id_customer
         }
-        const result = await customer.findOne({ where : params})
+        const result = await customer.findOne({ where: params })
         if (result == null) {
             return res.status(404).json({
                 message: "Data not found!"
@@ -184,11 +184,41 @@ const findOneCustomer = async (req, res) => {
     }
 }
 
+const findCustomerDataFilter = async (req, res) => {
+    try {
+        const keyword = req.body.keyword
+
+        const result = await customer.findAll({
+            where: {
+                [Op.or]: {
+                    nik: { [Op.like]: `%${keyword}%` },
+                    customer_name: { [Op.like]: `%${keyword}%` },
+                    address: { [Op.like]: `%${keyword}%` },
+                    email: { [Op.like]: `%${keyword}%` }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Succes to get all customer by filter",
+            count: result.length,
+            data: result,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+};
+
 module.exports = {
     login,
     register,
     updateCustomer,
     deleteCustomer,
     findAllCustomer,
-    findOneCustomer
+    findOneCustomer,
+    findCustomerDataFilter
 }

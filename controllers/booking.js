@@ -271,12 +271,9 @@ const getAllBooking = async (req, res) => {
     }
 };
 
-// filter by checkInDate
-findBookingDataFilter = async (req, res) => {
+const findBookingDataFilter = async (req, res) => {
     try {
         const keyword = req.body.keyword
-        const checkInDate = new Date(req.body.check_in_date);
-        const checOutDate = new Date(req.body.check_out_date);
 
         const result = await booking.findAll({
             include: ["user", "room_type", "customer"],
@@ -284,11 +281,8 @@ findBookingDataFilter = async (req, res) => {
                 [Op.or]: {
                     booking_number: { [Op.like]: `%${keyword}%` },
                     name_customer: { [Op.like]: `%${keyword}%` },
-                    email: { [Op.like]: `%${keyword}%` },
-                    guest_name: { [Op.like]: `%${keyword}%` },
-                    check_in_date: {
-                        [Op.between]: [checkInDate, checOutDate],
-                    },
+                    booking_status: { [Op.like]: `%${keyword}%` },
+                    guest_name: { [Op.like]: `%${keyword}%` }
                 }
             }
         });
@@ -342,6 +336,7 @@ const findBookingByIdCustomer = async (req, res) => {
 
         const customerData = await customer.findOne({
             where: params
+            
         })
         if (customerData == null) {
             return res.status(404).json({
@@ -349,7 +344,7 @@ const findBookingByIdCustomer = async (req, res) => {
             });
         }
 
-        const result = await booking.findAll({ where: params })
+        const result = await booking.findAll({ where: params , include: ["room_type"],})
         return res.status(200).json({
             message: "Succes to get all booking by id customer",
             count: result.length,

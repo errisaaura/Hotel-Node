@@ -11,5 +11,6 @@ router.put("/update/:id_room_type", auth.authVerify, upload.single("photo"), roo
 router.delete("/delete/:id_room_type", auth.authVerify, roomTypeController.deleteRoomType)
 router.get("/", roomTypeController.getAllRoomType)
 router.get("/:id_room_type", roomTypeController.getOneRoomType)
+router.post("/find/filter", roomTypeController.findRoomTypeDataFilter)
 
 module.exports = router

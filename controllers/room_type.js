@@ -160,10 +160,38 @@ const getOneRoomType = async (req, res) => {
     }
 };
 
+const findRoomTypeDataFilter = async (req, res) => {
+    try {
+        const keyword = req.body.keyword
+
+        const result = await roomType.findAll({
+            where: {
+                [Op.or]: {
+                    name_room_type: { [Op.like]: `%${keyword}%` },
+                    price: { [Op.like]: `%${keyword}%` },
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Succes to get all room type by filter",
+            count: result.length,
+            data: result,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+};
+
 module.exports = {
     addRoomType,
     updateRoomType,
     deleteRoomType,
     getAllRoomType,
     getOneRoomType,
+    findRoomTypeDataFilter
 };

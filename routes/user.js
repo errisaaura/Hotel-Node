@@ -12,8 +12,10 @@ router.post("/login", userController.login)
 router.post("/add", upload.single("photo"), userController.addUser)
 router.put("/update/:id_user", auth.authVerify, upload.single("photo"), userController.updateUser)
 router.delete("/delete/:id_user", auth.authVerify, userController.deleteUser)
-router.get("/", auth.authVerify, userController.findAllUser)
+router.get("/", userController.findAllUser)
 router.get("/:id_user", auth.authVerify, userController.findOneUser)
+router.get("/role/customer", userController.findAllUserRoleResepsionis)
+router.post("/find/filter", userController.findUserDataFilter)
 
 
 

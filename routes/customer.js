@@ -12,5 +12,6 @@ router.put("/update/:id_customer", auth.authVerify, customerController.updateCus
 router.delete("/delete/:id_customer", auth.authVerify, customerController.deleteCustomer)
 router.get("/", customerController.findAllCustomer)
 router.get("/:id_customer", customerController.findOneCustomer)
+router.post("/find/filter", customerController.findCustomerDataFilter)
 
 module.exports = router
