@@ -254,7 +254,7 @@ const getOneBooking = async (req, res) => {
 const getAllBooking = async (req, res) => {
     try {
         const result = await booking.findAll({
-            include: ["room_type"],
+            include: ["room_type", "detail_booking"],
         });
 
         return res.status(200).json({
@@ -272,6 +272,39 @@ const getAllBooking = async (req, res) => {
 };
 
 const findBookingDataFilter = async (req, res) => {
+    try {
+        const keyword = req.body.keyword
+
+        const result = await booking.findAll({
+            include: ["user", "room_type", "customer"],
+            where: {
+                [Op.or]: {
+                    booking_number: { [Op.like]: `%${keyword}%` },
+                    name_customer: { [Op.like]: `%${keyword}%` },
+                    booking_status: { [Op.like]: `%${keyword}%` },
+                    guest_name: { [Op.like]: `%${keyword}%` }
+                },
+                [Op.and]: {
+                    id_customer: req.params.id_customer
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Succes to get all booking by filter",
+            count: result.length,
+            data: result,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal error",
+            err: err,
+        });
+    }
+};
+
+const findBookingDataFilterForUser = async (req, res) => {
     try {
         const keyword = req.body.keyword
 
@@ -368,5 +401,6 @@ module.exports = {
     getOneBooking,
     findBookingDataFilter,
     findBookingByNameCustomer,
-    findBookingByIdCustomer
+    findBookingByIdCustomer,
+    findBookingDataFilterForUser
 };
